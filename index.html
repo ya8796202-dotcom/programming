@@ -3,97 +3,78 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YASSER BOT — برو زجاجي مع توليد صور</title>
+<title>صانع الصور — YASSER</title>
 <meta name="theme-color" content="#0ea5e9">
 <style>
   body{margin:0;font-family:"Noto Sans Arabic",sans-serif;background:#0f172a;color:#fff;display:flex;flex-direction:column;height:100vh}
   header{background:#1f2937;padding:10px;display:flex;justify-content:space-between;align-items:center}
-  .btn{padding:6px 12px;border:none;border-radius:6px;cursor:pointer;margin:0 4px}
+  .btn{padding:8px 14px;border:none;border-radius:6px;cursor:pointer;margin:0 4px}
   .btn.primary{background:#0ea5e9;color:#fff}
   .btn.secondary{background:#374151;color:#fff}
-  #messages{flex:1;overflow:auto;padding:10px}
-  .bubble{margin:6px;padding:10px;border-radius:8px;max-width:70%}
-  .user{background:#2563eb;margin-left:auto}
-  .bot{background:#374151;margin-right:auto}
-  footer{display:flex;padding:10px;background:#111827}
-  textarea{flex:1;padding:8px;border-radius:6px;border:none}
+  main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+  textarea{width:80%;max-width:600px;height:80px;padding:10px;border-radius:8px;border:none;margin-bottom:10px}
+  #output{margin-top:20px;max-width:80%;text-align:center}
+  #output img{max-width:100%;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
 </style>
 </head>
 <body>
 <header>
-  <div><strong>YASSER BOT</strong></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <!-- أيقونة مناسبة: كاميرا -->
+    <div style="width:40px;height:40px;border-radius:10px;background:conic-gradient(from 210deg,#0ea5e9,#6366f1,#22d3ee,#0ea5e9)"></div>
+    <strong>صانع الصور — YASSER</strong>
+  </div>
   <div>
-    <button id="modeBtn" class="btn secondary">تبديل الوضع</button>
     <button id="installBtn" class="btn secondary" style="display:none">تثبيت</button>
-    <button id="downloadBtn" class="btn secondary">تنزيل</button>
-    <button id="clearBtn" class="btn secondary">مسح</button>
+    <button id="downloadBtn" class="btn secondary">تنزيل الصفحة</button>
   </div>
 </header>
-<div id="messages"></div>
-<footer>
-  <textarea id="input" placeholder="اكتب رسالتك..."></textarea>
-  <button id="sendBtn" class="btn primary">إرسال</button>
-  <button id="imgBtn" class="btn secondary">إنشاء صورة</button>
-</footer>
+
+<main>
+  <textarea id="desc" placeholder="اكتب وصف الصورة التي تريد إنشاؤها..."></textarea>
+  <button id="createBtn" class="btn primary">إنشاء صورة</button>
+  <div id="output"></div>
+</main>
 
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
-  const sendBtn=document.getElementById('sendBtn');
-  const input=document.getElementById('input');
-  const messages=document.getElementById('messages');
-  const modeBtn=document.getElementById('modeBtn');
+  const desc=document.getElementById('desc');
+  const createBtn=document.getElementById('createBtn');
+  const output=document.getElementById('output');
   const installBtn=document.getElementById('installBtn');
   const downloadBtn=document.getElementById('downloadBtn');
-  const clearBtn=document.getElementById('clearBtn');
-  const imgBtn=document.getElementById('imgBtn');
   let deferredPrompt=null;
 
-  function addBubble(text,cls){
-    const div=document.createElement('div');
-    div.className="bubble "+cls;
-    div.textContent=text;
-    messages.appendChild(div);
-    messages.scrollTop=messages.scrollHeight;
-  }
+  // إنشاء صورة (في النسخة الحقيقية يتم استدعاء خدمة توليد الصور)
+  createBtn.onclick=()=>{
+    const text=desc.value.trim();
+    if(!text){alert("اكتب وصف الصورة أولاً");return;}
+    output.innerHTML="<p>جارٍ إنشاء صورة بناءً على الوصف: "+text+"</p>";
+    // هنا يتم استدعاء خدمة توليد الصور الفعلية
+    // في النموذج الحالي سنعرض صورة تجريبية
+    setTimeout(()=>{
+      const img=document.createElement('img');
+      img.src="https://picsum.photos/600/400?random="+Math.floor(Math.random()*1000);
+      output.innerHTML="";
+      output.appendChild(img);
+    },1000);
+  };
 
-  function send(){
-    const q=input.value.trim();
-    if(!q) return;
-    addBubble("أنت: "+q,'user');
-    input.value="";
-    setTimeout(()=>addBubble("YASSER BOT: رد ذكي على '"+q+"'",'bot'),300);
-  }
-
-  sendBtn.onclick=send;
-  input.onkeydown=(e)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}};
-
-  modeBtn.onclick=()=>document.body.classList.toggle('yellow');
-  clearBtn.onclick=()=>{messages.innerHTML="";};
+  // تنزيل الصفحة
   downloadBtn.onclick=()=>{
     const html=document.documentElement.outerHTML;
     const blob=new Blob([html],{type:'text/html'});
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download="YASSER-BOT.html";a.click();URL.revokeObjectURL(url);
+    const a=document.createElement('a');a.href=url;a.download="ImageMaker-YASSER.html";a.click();URL.revokeObjectURL(url);
   };
 
+  // PWA install
   window.addEventListener('beforeinstallprompt',(e)=>{
     e.preventDefault();deferredPrompt=e;installBtn.style.display='inline-block';
   });
   installBtn.onclick=async()=>{
     if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display='none';}
   };
-
-  // زر إنشاء صورة
-  imgBtn.onclick=()=>{
-    const desc=prompt("اكتب وصف الصورة التي تريد إنشاؤها:");
-    if(!desc) return;
-    addBubble("جارٍ إنشاء صورة: "+desc,'bot');
-    // هنا يتم استدعاء خدمة توليد الصور (graphic_art) في النسخة الحقيقية
-    // في هذا النموذج سنعرض رسالة فقط
-    setTimeout(()=>addBubble("✅ تم إنشاء صورة بناءً على الوصف: "+desc,'bot'),1000);
-  };
-
-  addBubble("مرحبًا! أنا YASSER BOT برو زجاجي مع توليد صور. اكتب رسالة أو اضغط 'إنشاء صورة'.",'bot');
 });
 </script>
 </body>
