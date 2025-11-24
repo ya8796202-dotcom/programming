@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YASSER BOT — برو زجاجي + مليون موضوع برمجة</title>
+<meta name="theme-color" content="#0ea5e9">
+<style>
+  :root{
+    --bg:#0b1220; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8;
+    --primary:#0ea5e9; --accent:#6366f1; --user:#2563eb; --bot:#1f2937;
+    --glass1:rgba(255,255,255,0.10); --glass2:rgba(255,255,255,0.05); --border:rgba(255,255,255,0.16);
+  }
+  :root.theme-yellow{
+    --bg:#0a0a06; --panel:#14140a; --text:#fffbe6; --muted:#f7e8a1;
+    --primary:#f5c518; --accent:#ffd65b; --user:#f5c518; --bot:#2a240f;
+    --glass1:rgba(245,197,24,0.18); --glass2:rgba(245,197,24,0.08); --border:rgba(245,197,24,0.28);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:system-ui,"Noto Sans Arabic",Segoe UI,Roboto,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(14,165,233,0.18), transparent),
+      radial-gradient(900px 500px at 10% 120%, rgba(99,102,241,0.14), transparent),
+      linear-gradient(160deg,var(--bg),var(--panel));
+    color:var(--text);
+  }
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 16px; backdrop-filter:blur(12px) saturate(1.06);
+    background:linear-gradient(180deg, var(--glass1), var(--glass2));
+    border-bottom:1px solid var(--border);
+    box-shadow:0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:12px;background:
+    conic-gradient(from 210deg,var(--primary),var(--accent),#22d3ee,var(--primary));
+    box-shadow:0 6px 20px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .title{font-weight:800;letter-spacing:.25px}
+  .muted{color:var(--muted);font-size:.9rem}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{
+    appearance:none;border:1px solid var(--border);outline:none;cursor:pointer;
+    padding:10px 12px;border-radius:10px;font-weight:800;color:white;
+    background:linear-gradient(180deg,var(--primary),#2563eb);
+    transition:transform .12s ease, filter .2s ease;
+  }
+  .btn:hover{transform:translateY(-1px);filter:saturate(1.08)}
+  .btn.ghost{background:linear-gradient(180deg, var(--glass1), var(--glass2))}
+  .wrap{max-width:1100px;margin:18px auto;padding:0 16px}
+  .panel{
+    border:1px solid var(--border); border-radius:18px;
+    background:linear-gradient(180deg, var(--glass1), var(--glass2));
+    backdrop-filter:blur(12px) saturate(1.06);
+    box-shadow:0 25px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+  @media(max-width:960px){ .grid{grid-template-columns:1fr} }
+  .card{padding:14px;display:flex;flex-direction:column;gap:12px}
+  .select, textarea{
+    width:100%; background:rgba(2,6,23,0.5); color:var(--text);
+    border:1px solid var(--border); border-radius:10px; padding:10px;
+    backdrop-filter:blur(8px);
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;
+    background:rgba(34,197,94,0.12);color:#a7f3d0;border:1px dashed rgba(34,197,94,0.35);font-weight:800
+  }
+  .badge.warn{background:rgba(245,158,11,0.12);color:#fde68a;border-color:rgba(245,158,11,0.35)}
+  .messages{padding:16px;min-height:46vh;overflow:auto}
+  .bubble{
+    max-width:72%; margin:8px 0; padding:12px; border-radius:14px; white-space:pre-wrap;
+    background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.08));
+    border:1px solid var(--border);
+    box-shadow:0 10px 30px rgba(0,0,0,0.28);
+  }
+  .bubble.user{background:linear-gradient(180deg,var(--user),#1e40af); margin-left:auto}
+  .bubble.bot{background:linear-gradient(180deg,var(--bot),#0b0f19); margin-right:auto}
+  .header{font-weight:900;margin-bottom:6px}
+  .composer{
+    display:flex;gap:10px;padding:12px;border-top:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.26)); backdrop-filter:blur(8px);
+    border-bottom-left-radius:18px;border-bottom-right-radius:18px;
+  }
+  .generator{
+    display:flex;flex-direction:column;gap:10px;padding:12px;border-top:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(0,0,0,0.14), rgba(0,0,0,0.22)); border-bottom-left-radius:18px;border-bottom-right-radius:18px;
+  }
+  .progress{height:10px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden}
+  .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent))}
+  .small{font-size:.92rem}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div class="title">YASSER BOT — برو زجاجي</div>
+        <div class="muted">قابل للتثبيت · مليون موضوع برمجة قابل للتنزيل</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="modeDarkBtn" class="btn">الوضع الليلي</button>
+      <button id="modeYellowBtn" class="btn ghost">الوضع الأصفر</button>
+      <button id="installBtn" class="btn ghost" style="display:none">تثبيت التطبيق</button>
+      <button id="downloadBtn" class="btn ghost">تنزيل الصفحة</button>
+      <button id="clearBtn" class="btn ghost">مسح المحادثة</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="grid">
+      <aside class="panel card">
+        <div class="badge">فضاء توليد: ≥ 100,000,000 تركيبة</div>
+        <div class="badge warn" id="countBadge">الجلسة الحالية: 0 رد</div>
+
+        <label class="muted">أسلوب الرد</label>
+        <select id="styleSelect" class="select">
+          <option value="مختصر">مختصر</option>
+          <option value="مفصل" selected>مفصل</option>
+          <option value="تعليمي">تعليمي</option>
+          <option value="تقني">تقني</option>
+          <option value="قائمة نقاط">قائمة نقاط</option>
+        </select>
+
+        <div class="panel generator">
+          <div class="small muted">مُولّد مليون موضوع (NDJSON). يُنشئ الملف داخل المتصفح ويحمّله مباشرة.</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <button id="gen100kBtn" class="btn">توليد 100,000</button>
+            <button id="gen1mBtn" class="btn">توليد 1,000,000</button>
+            <button id="cancelGenBtn" class="btn ghost">إلغاء التوليد</button>
+          </div>
+          <div class="progress"><div id="bar" class="bar"></div></div>
+          <div id="genStatus" class="small muted">الجاهزية.</div>
+        </div>
+      </aside>
+
+      <section class="panel" style="display:flex;flex-direction:column">
+        <div id="messages" class="messages" role="log" aria-live="polite"></div>
+        <div class="composer">
+          <textarea id="input" placeholder="اكتب سؤالك هنا..." aria-label="نص الرسالة"></textarea>
+          <button id="sendBtn" class="btn">إرسال</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  const sendBtn = document.getElementById('sendBtn');
+  const inputEl = document.getElementById('input');
+  const messagesEl = document.getElementById('messages');
+  const countBadge = document.getElementById('countBadge');
+  const styleSelect = document.getElementById('styleSelect');
+  const modeDarkBtn = document.getElementById('modeDarkBtn');
+  const modeYellowBtn = document.getElementById('modeYellowBtn');
+  const installBtn = document.getElementById('installBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const gen100kBtn = document.getElementById('gen100kBtn');
+  const gen1mBtn = document.getElementById('gen1mBtn');
+  const cancelGenBtn = document.getElementById('cancelGenBtn');
+  const bar = document.getElementById('bar');
+  const genStatus = document.getElementById('genStatus');
+
+  let sessionCount = 0;
+  let deferredPrompt = null;
+
+  function addBubble(text, cls){
+    const div = document.createElement('div');
+    div.className = `bubble ${cls}`;
+    const lines = text.split('\n');
+    const header = lines[0] || "";
+    const rest = lines.slice(1).join('\n');
+    const h = document.createElement('div'); h.className = 'header'; h.textContent = header || (cls==='bot'?'YASSER BOT':'أنت');
+    div.appendChild(h);
+    if(rest){
+      const b = document.createElement('div'); b.textContent = rest; div.appendChild(b);
+    }
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function composeReply(q){
+    const style = styleSelect.value;
+    const intro = "تمهيد: هذا السؤال يفتح باب لفهم أعمق.";
+    const detail = "تفاصيل: فكّر في الهدف والقيود، جرّب بسرعة، قِس النتائج، وحسّن تدريجيًا.";
+    const example = "مثال: طبّق الفكرة في مشروع صغير ثم راقب الأداء قبل التوسيع.";
+    const closer = "خاتمة: بساطة + اختبار مستمر = جودة قابلة للتطور.";
+    let body = "";
+    if(style==='مختصر') body = `${intro}\n${closer}`;
+    else if(style==='تعليمي') body = `${intro}\n${detail}\nتشبيه: تخيل النظام كمدينة تحتاج تخطيطًا جيدًا.\n${example}\n${closer}`;
+    else if(style==='تقني') body = `${intro}\n${detail}\nنقاط تقنية: قياس زمن التنفيذ، إدارة الذاكرة، مراقبة الأخطاء.\n${closer}`;
+    else if(style==='قائمة نقاط') body = `${intro}\n• تحديد الهدف\n• اختيار الأدوات\n• التجربة والقياس\n• التحسين\n${closer}`;
+    else body = `${intro}\n\n${detail}\n\n${example}\n\n${closer}`;
+    return {header:`رد — YASSER BOT`, text: body};
+  }
+
+  function send(){
+    const q = (inputEl.value || "").trim();
+    if(!q) return;
+    addBubble(q ? `أنت: ${q}` : "أنت", 'user');
+    inputEl.value = "";
+    setTimeout(()=>{
+      const r = composeReply(q);
+      addBubble(`${r.header}\n\n${r.text}`, 'bot');
+      sessionCount++;
+      countBadge.textContent = `الجلسة الحالية: ${sessionCount} رد`;
+    }, 220);
+  }
+
+  sendBtn.addEventListener('click', send);
+  inputEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }});
+  modeDarkBtn.addEventListener('click', ()=> document.documentElement.classList.remove('theme-yellow'));
+  modeYellowBtn.addEventListener('click', ()=> document.documentElement.classList.add('theme-yellow'));
+  clearBtn.addEventListener('click', ()=>{
+    messagesEl.innerHTML = ""; sessionCount=0; countBadge.textContent = `الجلسة الحالية: 0 رد`;
+    addBubble("تم مسح المحادثة. ابدأ سؤالًا جديدًا.", "bot");
+  });
+  downloadBtn.addEventListener('click', ()=>{
+    const html = document.documentElement.outerHTML;
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'YASSER-BOT-pro-glass-mega.html';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault(); deferredPrompt = e; installBtn.style.display='inline-block';
+  });
+  installBtn.addEventListener('click', async ()=>{
+    if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; installBtn.style.display='none'; }
+    else alert('استخدم قائمة المتصفح لتثبيت التطبيق إن لم يظهر الحوار.');
+  });
+
+  // أيقونة + Manifest
+  async function createIcon(size){
+    const c=document.createElement('canvas'); c.width=size; c.height=size;
+    const ctx=c.getContext('2d');
+    const g=ctx.createLinearGradient(0,0,size,size); g.addColorStop(0,'#0ea5e9'); g.addColorStop(1,'#6366f1');
+    ctx.fillStyle=g; ctx.fillRect(0,0,size,size);
+    ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.lineWidth=size*0.05; ctx.beginPath();
+    ctx.arc(size/2,size/2,size*0.42,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.font=`${Math.floor(size*0.16)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('YASSER', size/2, size*0.42);
+    ctx.font=`${Math.floor(size*0.12)}px sans-serif`; ctx.fillText('BOT', size/2, size*0.62);
+    const b=await new Promise(res=>c.toBlob(res,'image/png')); return URL.createObjectURL(b);
+  }
+  async function setupManifest(){
+    try{
+      const i192=await createIcon(192); const i512=await createIcon(512);
+      const m={name:"YASSER BOT — Pro Glass Mega",short_name:"YASSER BOT",start_url:"./",display:"standalone",background_color:"#0f172a",theme_color:"#0ea5e9",
+        icons:[{src:i192,sizes:"192x192",type:"image/png"},{src:i512,sizes:"512x512",type:"image/png"}]};
+      const blob=new Blob([JSON.stringify(m)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
+    }catch(e){}
+  }
+  async function setupSW(){
+    if(!('serviceWorker' in navigator)) return;
+    const sw = `
+      const CACHE='yasser-pro-glass-mega-v1';
+      self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./']))); self.skipWaiting(); });
+      self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
+      self.addEventListener('fetch',e=>{
+        e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+          const copy=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,copy)); return res;
+        })).catch(()=>caches.match('./')));
+      });
+    `;
+    const blob=new Blob([sw],{type:'application/javascript'});
+    const url=URL.createObjectURL(blob);
+    navigator.serviceWorker.register(url,{scope:'./'});
+  }
+  (async function boot(){ await setupManifest(); await setupSW(); addBubble("جاهز. توليد مليون موضوع NDJSON يتم داخل المتصفح بدون خوادم.", "bot"); })();
+
+  // =========================
+  // مولّد مليون موضوع NDJSON
+  // =========================
+  const Languages = ["JavaScript","Python","Java","C#","Go","Rust","C++","PHP","Ruby","Kotlin","Swift","TypeScript"];
+  const Domains = ["Data Structures","Algorithms","OOP","FP","Security","Networking","Databases","Cloud","DevOps","Testing","UX","Systems"];
+  const Concepts = [
+    "Array","Linked List","Stack","Queue","Tree","Binary Search Tree","AVL","Red-Black Tree","Graph","Dijkstra","Bellman-Ford","Floyd-Warshall","Topological Sort",
+    "Union-Find","HashMap","Bloom Filter","LRU Cache","Trie","Segment Tree","Fenwick Tree","Heap","Priority Queue","Skip List","Suffix Array","Suffix Tree",
+    "KMP","Rabin-Karp","Bitmasking","Two Pointers","Sliding Window","Dynamic Programming","Greedy","Backtracking","Divide and Conquer","Memoization","Tabulation",
+    "Sorting: Quick","Sorting: Merge","Sorting: Heap","Binary Search","A*","BFS","DFS","Minimum Spanning Tree","Kruskal","Prim","Shortest Path","Graph Coloring",
+    "Concurrency","Parallelism","Lock-free","Transactions","ACID","BASE","CQRS","Event Sourcing","Pub/Sub","Caching","Sharding","Replication",
+    "Indexing","Query Planning","Normalization","Denormalization","NoSQL","SQL","ORM","Connection Pooling","Observability","Tracing","Metrics","Logs",
+    "API Design","REST","GraphQL","gRPC","WebSockets","Server-Sent Events","Rate Limiting","Circuit Breaker","Retry","Timeout","Backoff","Idempotency",
+    "Authentication","Authorization","JWT","OAuth2","OpenID Connect","mTLS","TLS","CSRF","CORS","XSS Awareness","SQLi Awareness","Secrets Management"
+  ];
+  const Scenarios = ["Web API","Realtime","Offline-first","Caching","Observability","Scaling","Resilience","Streaming","Batch","ETL","Microservices","Event-driven"];
+  const Patterns = ["Singleton","Factory","Strategy","Observer","Decorator","Adapter","Facade","Builder","Prototype","Command","Mediator","State"];
+  const Levels = ["Beginner","Intermediate","Advanced"];
+  const Envs = ["Frontend","Backend","Mobile","Data","ML","Systems","Cloud","Security"];
+  const Variants = Array.from("ABCDEFGHIJ"); // 10 متغيرات تكفي للتنويع
+
+  // مولّد تركيبي حتمي لضمان عدم التكرار: نستخدم العدّ الأساسي على فضاء التركيبات
+  function comboCount(){ return Languages.length*Domains.length*Concepts.length*Scenarios.length*Levels.length*Envs.length*Patterns.length*Variants.length; }
+
+  let cancelFlag = false;
+  function setProgress(done, total){
+    const pct = Math.floor((done/total)*100);
+    bar.style.width = pct + "%";
+    genStatus.textContent = `تم إنشاء ${done.toLocaleString()} / ${total.toLocaleString()} موضوع (${pct}%)`;
+  }
+
+  async function generateNDJSON(target){
+    cancelFlag = false;
+    const totalCombos = comboCount();
+    if(target > totalCombos) target = totalCombos; // سقف أعلى
+    genStatus.textContent = "جارِ التوليد… قد يستغرق وقتًا. لا تغلق الصفحة.";
+    bar.style.width = "0%";
+
+    const parts = []; // سنبني Blob من أجزاء لتقليل الضغط
+    const batchSize = 5000;
+    let generated = 0;
+
+    // حلقات متداخلة لكن مع حدود: نكسر مبكرًا عندما نصل للهدف
+    outer:
+    for(let a=0;a<Languages.length;a++){
+      for(let b=0;b<Domains.length;b++){
+        for(let c=0;c<Concepts.length;c++){
+          for(let d=0;d<Scenarios.length;d++){
+            for(let e=0;e<Levels.length;e++){
+              for(let f=0;f<Envs.length;f++){
+                for(let g=0;g<Patterns.length;g++){
+                  for(let h=0;h<Variants.length;h++){
+                    if(cancelFlag) break outer;
+                    const lang=Languages[a], domain=Domains[b], concept=Concepts[c], sc=Scenarios[d], lvl=Levels[e], env=Envs[f], pat=Patterns[g], variant=Variants[h];
+
+                    const title = `${concept} في ${lang} — ${sc} (${lvl}/${env}/${pat}/${variant})`;
+                    const summary = `${concept}: مفهوم ضمن ${domain} يُستخدم لحل مشاكل محددة في سياقات مثل ${sc}.`;
+                    const body = [
+                      `مقدمة: ${concept} يقع ضمن ${domain} ويخدم سيناريو ${sc} في بيئة ${env}.`,
+                      `نظرية: البنية، التعقيد الزمني/المكاني، ومقايضات التصميم.`,
+                      `تطبيق: خطوات اعتماد ${concept}، أدوات مناسبة، قياس ومراقبة.`,
+                      `مثال: استخدام ${concept} لتحسين الأداء/القابلية للصيانة.`,
+                      `أخطاء شائعة: سوء اختيار الهيكل/الخوارزمية، تعقيد زائد، غياب المراقبة.`,
+                      `خاتمة: ابدأ بسيطًا، اختبر مبكرًا، ووسّع تدريجيًا مع مراقبة مستمرة.`
+                    ].join("\\n\\n");
+
+                    const exampleCode = (()=>{
+                      const map = {
+                        "JavaScript": `// ${concept}\\nfunction demo(){ console.log("${concept}"); }`,
+                        "Python": `# ${concept}\\ndef demo():\\n    print("${concept}")\\ndemo()`,
+                        "C#": `// ${concept}\\nclass Demo { static void Main(){ System.Console.WriteLine("${concept}"); } }`,
+                        "Go": `// ${concept}\\npackage main\\nimport "fmt"\\nfunc main(){ fmt.Println("${concept}") }`,
+                        "Rust": `// ${concept}\\nfn main(){ println!("${concept}"); }`
+                      };
+                      return map[lang] || `// ${concept}\\n// مثال عام`;
+                    })();
+
+                    const row = {
+                      title, domain,
+                      tags: [lang, domain, concept, sc, env],
+                      difficulty: lvl,
+                      summary,
+                      body,
+                      examples: [{ lang, code: exampleCode }],
+                      relations: ["مرتبط: مفاهيم قريبة بشكل عام"],
+                      variant,
+                      created_at: new Date().toISOString()
+                    };
+
+                    parts.push(JSON.stringify(row)+"\n");
+                    generated++;
+                    if(generated % batchSize === 0){
+                      setProgress(generated, target);
+                      // إتاحة دورة للمتصفح
+                      await new Promise(r=>setTimeout(r, 0));
+                      if(generated >= target) break outer;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    setProgress(generated, target);
+    genStatus.textContent = cancelFlag ? `تم الإلغاء بعد ${generated.toLocaleString()} موضوع.` : `اكتمل التوليد: ${generated.toLocaleString()} موضوع. جاري تجهيز التحميل…`;
+
+    // كوّن Blob واحد من الأجزاء ونزّله
+    const blob = new Blob(parts, {type:'application/x-ndjson'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `programming-topics-${generated}.ndjson`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    genStatus.textContent = `تم تنزيل الملف: ${a.download}`;
+  }
+
+  gen100kBtn.addEventListener('click', ()=> generateNDJSON(100_000));
+  gen1mBtn.addEventListener('click', ()=> generateNDJSON(1_000_000));
+  cancelGenBtn.addEventListener('click', ()=>{ cancelFlag = true; genStatus.textContent = "طلب إلغاء… سيوقف عند أول فرصة."; });
+
+});
+</script>
+</body>
+</html>
