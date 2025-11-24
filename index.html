@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YASSER BOT — برو زجاجي + مليون موضوع برمجة</title>
+<title>YASSER BOT — برو زجاجي، مليون موضوع داخل الدردشة</title>
 <meta name="theme-color" content="#0ea5e9">
 <style>
   :root{
@@ -60,7 +60,7 @@
   .grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
   @media(max-width:960px){ .grid{grid-template-columns:1fr} }
   .card{padding:14px;display:flex;flex-direction:column;gap:12px}
-  .select, textarea{
+  .select, textarea, input{
     width:100%; background:rgba(2,6,23,0.5); color:var(--text);
     border:1px solid var(--border); border-radius:10px; padding:10px;
     backdrop-filter:blur(8px);
@@ -72,7 +72,7 @@
   .badge.warn{background:rgba(245,158,11,0.12);color:#fde68a;border-color:rgba(245,158,11,0.35)}
   .messages{padding:16px;min-height:46vh;overflow:auto}
   .bubble{
-    max-width:72%; margin:8px 0; padding:12px; border-radius:14px; white-space:pre-wrap;
+    margin:8px 0; padding:12px; border-radius:14px; white-space:pre-wrap;
     background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.08));
     border:1px solid var(--border);
     box-shadow:0 10px 30px rgba(0,0,0,0.28);
@@ -92,6 +92,7 @@
   .progress{height:10px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent))}
   .small{font-size:.92rem}
+  .pager{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 </style>
 </head>
 <body>
@@ -100,7 +101,7 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <div class="title">YASSER BOT — برو زجاجي</div>
-        <div class="muted">قابل للتثبيت · مليون موضوع برمجة قابل للتنزيل</div>
+        <div class="muted">قابل للتثبيت · عرض حتى 1,000,000 موضوع داخل الدردشة</div>
       </div>
     </div>
     <div class="actions">
@@ -118,7 +119,7 @@
         <div class="badge">فضاء توليد: ≥ 100,000,000 تركيبة</div>
         <div class="badge warn" id="countBadge">الجلسة الحالية: 0 رد</div>
 
-        <label class="muted">أسلوب الرد</label>
+        <label class="muted">أسلوب الرد اليدوي</label>
         <select id="styleSelect" class="select">
           <option value="مختصر">مختصر</option>
           <option value="مفصل" selected>مفصل</option>
@@ -128,14 +129,33 @@
         </select>
 
         <div class="panel generator">
-          <div class="small muted">مُولّد مليون موضوع (NDJSON). يُنشئ الملف داخل المتصفح ويحمّله مباشرة.</div>
+          <div class="small muted">توليد وعرض داخل الدردشة (بدون تنزيل). استخدم الصفحات والتصفية.</div>
           <div style="display:flex; gap:8px; flex-wrap:wrap">
-            <button id="gen100kBtn" class="btn">توليد 100,000</button>
-            <button id="gen1mBtn" class="btn">توليد 1,000,000</button>
-            <button id="cancelGenBtn" class="btn ghost">إلغاء التوليد</button>
+            <button id="gen100kBtn" class="btn">عرض 100,000</button>
+            <button id="gen1mBtn" class="btn">عرض 1,000,000</button>
+            <button id="cancelGenBtn" class="btn ghost">إلغاء</button>
           </div>
           <div class="progress"><div id="bar" class="bar"></div></div>
           <div id="genStatus" class="small muted">الجاهزية.</div>
+
+          <div class="pager">
+            <button id="prevPageBtn" class="btn ghost">الصفحة السابقة</button>
+            <button id="nextPageBtn" class="btn ghost">الصفحة التالية</button>
+            <span id="pageInfo" class="small muted">صفحة 1/1</span>
+            <label class="small muted">العناصر في الصفحة</label>
+            <select id="pageSizeSelect" class="select" style="max-width:120px">
+              <option>20</option>
+              <option selected>50</option>
+              <option>100</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+            <input id="searchInput" class="select" placeholder="ابحث داخل المواضيع (مثلاً: Graph, Python, API)">
+            <button id="searchBtn" class="btn ghost">بحث</button>
+            <button id="clearSearchBtn" class="btn ghost">إلغاء التصفية</button>
+            <span id="searchInfo" class="small muted">بدون تصفية.</span>
+          </div>
         </div>
       </aside>
 
@@ -161,14 +181,32 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const installBtn = document.getElementById('installBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const clearBtn = document.getElementById('clearBtn');
+
   const gen100kBtn = document.getElementById('gen100kBtn');
   const gen1mBtn = document.getElementById('gen1mBtn');
   const cancelGenBtn = document.getElementById('cancelGenBtn');
   const bar = document.getElementById('bar');
   const genStatus = document.getElementById('genStatus');
 
+  const prevPageBtn = document.getElementById('prevPageBtn');
+  const nextPageBtn = document.getElementById('nextPageBtn');
+  const pageInfo = document.getElementById('pageInfo');
+  const pageSizeSelect = document.getElementById('pageSizeSelect');
+
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  const searchInfo = document.getElementById('searchInfo');
+
   let sessionCount = 0;
   let deferredPrompt = null;
+
+  // Buffer & paging
+  const topicsBuffer = [];    // كل المواضيع المُولّدة
+  let filteredView = null;    // مصفاة بحث (مصفوفة أو null)
+  let currentPage = 1;
+  let pageSize = parseInt(pageSizeSelect.value, 10);
+  let cancelFlag = false;
 
   function addBubble(text, cls){
     const div = document.createElement('div');
@@ -225,7 +263,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const html = document.documentElement.outerHTML;
     const blob = new Blob([html], {type:'text/html'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'YASSER-BOT-pro-glass-mega.html';
+    const a = document.createElement('a'); a.href = url; a.download = 'YASSER-BOT-pro-glass-chat-1M.html';
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   });
 
@@ -237,7 +275,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     else alert('استخدم قائمة المتصفح لتثبيت التطبيق إن لم يظهر الحوار.');
   });
 
-  // أيقونة + Manifest
+  // Manifest + SW
   async function createIcon(size){
     const c=document.createElement('canvas'); c.width=size; c.height=size;
     const ctx=c.getContext('2d');
@@ -253,7 +291,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   async function setupManifest(){
     try{
       const i192=await createIcon(192); const i512=await createIcon(512);
-      const m={name:"YASSER BOT — Pro Glass Mega",short_name:"YASSER BOT",start_url:"./",display:"standalone",background_color:"#0f172a",theme_color:"#0ea5e9",
+      const m={name:"YASSER BOT — Pro Glass 1M Chat",short_name:"YASSER BOT",start_url:"./",display:"standalone",background_color:"#0f172a",theme_color:"#0ea5e9",
         icons:[{src:i192,sizes:"192x192",type:"image/png"},{src:i512,sizes:"512x512",type:"image/png"}]};
       const blob=new Blob([JSON.stringify(m)],{type:'application/json'});
       const url=URL.createObjectURL(blob);
@@ -263,7 +301,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   async function setupSW(){
     if(!('serviceWorker' in navigator)) return;
     const sw = `
-      const CACHE='yasser-pro-glass-mega-v1';
+      const CACHE='yasser-pro-glass-chat-1M-v1';
       self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./']))); self.skipWaiting(); });
       self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
       self.addEventListener('fetch',e=>{
@@ -276,51 +314,124 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const url=URL.createObjectURL(blob);
     navigator.serviceWorker.register(url,{scope:'./'});
   }
-  (async function boot(){ await setupManifest(); await setupSW(); addBubble("جاهز. توليد مليون موضوع NDJSON يتم داخل المتصفح بدون خوادم.", "bot"); })();
+  (async function boot(){ await setupManifest(); await setupSW(); addBubble("جاهز. عند الضغط على التوليد، ستظهر المواضيع مباشرة داخل الدردشة مع صفحات وتصفية للبحث.", "bot"); })();
 
   // =========================
-  // مولّد مليون موضوع NDJSON
+  // مُولّد موضوع كبير + عرض في الدردشة
   // =========================
   const Languages = ["JavaScript","Python","Java","C#","Go","Rust","C++","PHP","Ruby","Kotlin","Swift","TypeScript"];
-  const Domains = ["Data Structures","Algorithms","OOP","FP","Security","Networking","Databases","Cloud","DevOps","Testing","UX","Systems"];
+  const Domains = ["هياكل بيانات","خوارزميات","OOP","FP","أمن","شبكات","قواعد بيانات","سحابة","DevOps","اختبار","واجهات","أنظمة"];
   const Concepts = [
     "Array","Linked List","Stack","Queue","Tree","Binary Search Tree","AVL","Red-Black Tree","Graph","Dijkstra","Bellman-Ford","Floyd-Warshall","Topological Sort",
     "Union-Find","HashMap","Bloom Filter","LRU Cache","Trie","Segment Tree","Fenwick Tree","Heap","Priority Queue","Skip List","Suffix Array","Suffix Tree",
     "KMP","Rabin-Karp","Bitmasking","Two Pointers","Sliding Window","Dynamic Programming","Greedy","Backtracking","Divide and Conquer","Memoization","Tabulation",
-    "Sorting: Quick","Sorting: Merge","Sorting: Heap","Binary Search","A*","BFS","DFS","Minimum Spanning Tree","Kruskal","Prim","Shortest Path","Graph Coloring",
-    "Concurrency","Parallelism","Lock-free","Transactions","ACID","BASE","CQRS","Event Sourcing","Pub/Sub","Caching","Sharding","Replication",
+    "Quick Sort","Merge Sort","Heap Sort","Binary Search","A*","BFS","DFS","Minimum Spanning Tree","Kruskal","Prim","Shortest Path","Graph Coloring",
+    "Concurrency","Parallelism","Transactions","ACID","BASE","CQRS","Event Sourcing","Pub/Sub","Caching","Sharding","Replication",
     "Indexing","Query Planning","Normalization","Denormalization","NoSQL","SQL","ORM","Connection Pooling","Observability","Tracing","Metrics","Logs",
-    "API Design","REST","GraphQL","gRPC","WebSockets","Server-Sent Events","Rate Limiting","Circuit Breaker","Retry","Timeout","Backoff","Idempotency",
+    "API Design","REST","GraphQL","gRPC","WebSockets","SSE","Rate Limiting","Circuit Breaker","Retry","Timeout","Backoff","Idempotency",
     "Authentication","Authorization","JWT","OAuth2","OpenID Connect","mTLS","TLS","CSRF","CORS","XSS Awareness","SQLi Awareness","Secrets Management"
   ];
   const Scenarios = ["Web API","Realtime","Offline-first","Caching","Observability","Scaling","Resilience","Streaming","Batch","ETL","Microservices","Event-driven"];
   const Patterns = ["Singleton","Factory","Strategy","Observer","Decorator","Adapter","Facade","Builder","Prototype","Command","Mediator","State"];
   const Levels = ["Beginner","Intermediate","Advanced"];
   const Envs = ["Frontend","Backend","Mobile","Data","ML","Systems","Cloud","Security"];
-  const Variants = Array.from("ABCDEFGHIJ"); // 10 متغيرات تكفي للتنويع
+  const Variants = Array.from("ABCDEFGHIJ"); // تنويع نصّي
 
-  // مولّد تركيبي حتمي لضمان عدم التكرار: نستخدم العدّ الأساسي على فضاء التركيبات
-  function comboCount(){ return Languages.length*Domains.length*Concepts.length*Scenarios.length*Levels.length*Envs.length*Patterns.length*Variants.length; }
-
-  let cancelFlag = false;
   function setProgress(done, total){
     const pct = Math.floor((done/total)*100);
     bar.style.width = pct + "%";
     genStatus.textContent = `تم إنشاء ${done.toLocaleString()} / ${total.toLocaleString()} موضوع (${pct}%)`;
   }
 
-  async function generateNDJSON(target){
-    cancelFlag = false;
-    const totalCombos = comboCount();
-    if(target > totalCombos) target = totalCombos; // سقف أعلى
-    genStatus.textContent = "جارِ التوليد… قد يستغرق وقتًا. لا تغلق الصفحة.";
-    bar.style.width = "0%";
+  function makeBody(concept, domain, sc, env){
+    return [
+      `مقدمة: ${concept} يقع ضمن مجال ${domain} ويخدم سيناريو ${sc} في بيئة ${env}.`,
+      `نظرية: اشرح البنية الداخلية، التعقيد الزمني/المكاني، والمقايضات عند الاختيار.`,
+      `تطبيق عملي: خطوات اعتماد ${concept}، الأدوات الملائمة، وكيفية القياس والمراقبة.`,
+      `مثال واقعي: استخدام ${concept} لتحسين الأداء أو القابلية للصيانة في مشروع إنتاج.`,
+      `أخطاء شائعة: سوء اختيار الهيكل/الخوارزمية، تعقيد زائد، غياب المراقبة والتوثيق.`,
+      `خاتمة: ابدأ بسيطًا، اختبر مبكرًا، ووسّع تدريجيًا مع مراقبة مستمرة وقراءة النتائج.`
+    ].join("\n\n");
+  }
 
-    const parts = []; // سنبني Blob من أجزاء لتقليل الضغط
-    const batchSize = 5000;
+  function pushTopicToBuffer(lang, domain, concept, sc, lvl, env, pat, variant){
+    const title = `${concept} في ${lang} — ${sc} (${lvl}/${env}/${pat}/${variant})`;
+    const summary = `${concept}: مفهوم ضمن ${domain} يُستخدم لحل مشاكل محددة في سيناريوهات مثل ${sc}.`;
+    const body = makeBody(concept, domain, sc, env);
+    topicsBuffer.push({ title, summary, body });
+  }
+
+  function getActiveList(){
+    return filteredView || topicsBuffer;
+  }
+
+  // عرض صفحة من القائمة الفعالة
+  function renderPage(){
+    const list = getActiveList();
+    const total = list.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if(total === 0){
+      messagesEl.innerHTML = "";
+      pageInfo.textContent = `لا يوجد مواضيع للعرض.`;
+      return;
+    }
+    if(currentPage > totalPages) currentPage = totalPages;
+    if(currentPage < 1) currentPage = 1;
+
+    messagesEl.innerHTML = "";
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, total);
+    const frag = document.createDocumentFragment();
+
+    for(let i=start; i<end; i++){
+      const t = list[i];
+      const div = document.createElement('div');
+      div.className = 'bubble bot';
+      const header = document.createElement('div'); header.className = 'header'; header.textContent = t.title;
+      const body = document.createElement('div'); body.textContent = `${t.summary}\n\n${t.body}`;
+      div.appendChild(header); div.appendChild(body);
+      frag.appendChild(div);
+    }
+    messagesEl.appendChild(frag);
+    messagesEl.scrollTop = 0;
+    pageInfo.textContent = `صفحة ${currentPage}/${totalPages} — إجمالي ${total.toLocaleString()} موضوع`;
+  }
+
+  pageSizeSelect.addEventListener('change', ()=>{
+    pageSize = parseInt(pageSizeSelect.value, 10);
+    renderPage();
+  });
+  prevPageBtn.addEventListener('click', ()=>{ currentPage--; renderPage(); });
+  nextPageBtn.addEventListener('click', ()=>{ currentPage++; renderPage(); });
+
+  // بحث
+  function applySearch(){
+    const q = (searchInput.value || "").trim().toLowerCase();
+    if(!q){ filteredView = null; searchInfo.textContent = "بدون تصفية."; currentPage = 1; renderPage(); return; }
+    const base = topicsBuffer;
+    filteredView = base.filter(t =>
+      t.title.toLowerCase().includes(q) ||
+      t.summary.toLowerCase().includes(q) ||
+      t.body.toLowerCase().includes(q)
+    );
+    searchInfo.textContent = `تصفية: "${q}" — النتائج ${filteredView.length.toLocaleString()}`;
+    currentPage = 1;
+    renderPage();
+  }
+  searchBtn.addEventListener('click', applySearch);
+  clearSearchBtn.addEventListener('click', ()=>{ searchInput.value = ""; filteredView = null; searchInfo.textContent = "بدون تصفية."; currentPage=1; renderPage(); });
+  searchInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); applySearch(); } });
+
+  async function generateToChat(target){
+    cancelFlag = false;
+    genStatus.textContent = "جارِ التوليد والعرض داخل الدردشة… لا تغلق الصفحة.";
+    bar.style.width = "0%";
+    topicsBuffer.length = 0; filteredView = null; currentPage = 1;
+    renderPage();
+
+    const batchSize = 2000;
     let generated = 0;
 
-    // حلقات متداخلة لكن مع حدود: نكسر مبكرًا عندما نصل للهدف
     outer:
     for(let a=0;a<Languages.length;a++){
       for(let b=0;b<Domains.length;b++){
@@ -333,48 +444,16 @@ document.addEventListener('DOMContentLoaded', ()=>{
                     if(cancelFlag) break outer;
                     const lang=Languages[a], domain=Domains[b], concept=Concepts[c], sc=Scenarios[d], lvl=Levels[e], env=Envs[f], pat=Patterns[g], variant=Variants[h];
 
-                    const title = `${concept} في ${lang} — ${sc} (${lvl}/${env}/${pat}/${variant})`;
-                    const summary = `${concept}: مفهوم ضمن ${domain} يُستخدم لحل مشاكل محددة في سياقات مثل ${sc}.`;
-                    const body = [
-                      `مقدمة: ${concept} يقع ضمن ${domain} ويخدم سيناريو ${sc} في بيئة ${env}.`,
-                      `نظرية: البنية، التعقيد الزمني/المكاني، ومقايضات التصميم.`,
-                      `تطبيق: خطوات اعتماد ${concept}، أدوات مناسبة، قياس ومراقبة.`,
-                      `مثال: استخدام ${concept} لتحسين الأداء/القابلية للصيانة.`,
-                      `أخطاء شائعة: سوء اختيار الهيكل/الخوارزمية، تعقيد زائد، غياب المراقبة.`,
-                      `خاتمة: ابدأ بسيطًا، اختبر مبكرًا، ووسّع تدريجيًا مع مراقبة مستمرة.`
-                    ].join("\\n\\n");
-
-                    const exampleCode = (()=>{
-                      const map = {
-                        "JavaScript": `// ${concept}\\nfunction demo(){ console.log("${concept}"); }`,
-                        "Python": `# ${concept}\\ndef demo():\\n    print("${concept}")\\ndemo()`,
-                        "C#": `// ${concept}\\nclass Demo { static void Main(){ System.Console.WriteLine("${concept}"); } }`,
-                        "Go": `// ${concept}\\npackage main\\nimport "fmt"\\nfunc main(){ fmt.Println("${concept}") }`,
-                        "Rust": `// ${concept}\\nfn main(){ println!("${concept}"); }`
-                      };
-                      return map[lang] || `// ${concept}\\n// مثال عام`;
-                    })();
-
-                    const row = {
-                      title, domain,
-                      tags: [lang, domain, concept, sc, env],
-                      difficulty: lvl,
-                      summary,
-                      body,
-                      examples: [{ lang, code: exampleCode }],
-                      relations: ["مرتبط: مفاهيم قريبة بشكل عام"],
-                      variant,
-                      created_at: new Date().toISOString()
-                    };
-
-                    parts.push(JSON.stringify(row)+"\n");
+                    pushTopicToBuffer(lang, domain, concept, sc, lvl, env, pat, variant);
                     generated++;
+
                     if(generated % batchSize === 0){
                       setProgress(generated, target);
-                      // إتاحة دورة للمتصفح
+                      renderPage();
                       await new Promise(r=>setTimeout(r, 0));
                       if(generated >= target) break outer;
                     }
+                    if(generated >= target) break outer;
                   }
                 }
               }
@@ -383,21 +462,14 @@ document.addEventListener('DOMContentLoaded', ()=>{
         }
       }
     }
-
     setProgress(generated, target);
-    genStatus.textContent = cancelFlag ? `تم الإلغاء بعد ${generated.toLocaleString()} موضوع.` : `اكتمل التوليد: ${generated.toLocaleString()} موضوع. جاري تجهيز التحميل…`;
-
-    // كوّن Blob واحد من الأجزاء ونزّله
-    const blob = new Blob(parts, {type:'application/x-ndjson'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `programming-topics-${generated}.ndjson`;
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    genStatus.textContent = `تم تنزيل الملف: ${a.download}`;
+    renderPage();
+    genStatus.textContent = cancelFlag ? `تم الإلغاء بعد ${generated.toLocaleString()} موضوع.` : `اكتمل العرض: ${generated.toLocaleString()} موضوع داخل الدردشة. استخدم الصفحات والتصفية.`;
   }
 
-  gen100kBtn.addEventListener('click', ()=> generateNDJSON(100_000));
-  gen1mBtn.addEventListener('click', ()=> generateNDJSON(1_000_000));
-  cancelGenBtn.addEventListener('click', ()=>{ cancelFlag = true; genStatus.textContent = "طلب إلغاء… سيوقف عند أول فرصة."; });
+  gen100kBtn.addEventListener('click', ()=> generateToChat(100_000));
+  gen1mBtn.addEventListener('click', ()=> generateToChat(1_000_000));
+  cancelGenBtn.addEventListener('click', ()=>{ cancelFlag = true; genStatus.textContent = "طلب إلغاء… سيتم الإيقاف عند أول فرصة."; });
 
 });
 </script>
