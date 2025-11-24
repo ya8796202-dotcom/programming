@@ -27,12 +27,14 @@ const ctx=canvas.getContext('2d');
 
 // ===== توليد صورة بالذكاء الاصطناعي =====
 async function generateAIImage(prompt){
-  const res=await fetch("https://api.openai.com/v1/images/generations",{
+  const res = await fetch("http://localhost:3000/api/generate-image", {
     method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"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" // ضع مفتاحك هنا
-    },
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await res.json();
+  return data.data[0].url;
+},
     body:JSON.stringify({
       model:"gpt-image-1",
       prompt:prompt,
