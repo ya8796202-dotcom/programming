@@ -1,80 +1,242 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>صانع الصور — YASSER</title>
-<meta name="theme-color" content="#0ea5e9">
-<style>
-  body{margin:0;font-family:"Noto Sans Arabic",sans-serif;background:#0f172a;color:#fff;display:flex;flex-direction:column;height:100vh}
-  header{background:#1f2937;padding:10px;display:flex;justify-content:space-between;align-items:center}
-  .btn{padding:8px 14px;border:none;border-radius:6px;cursor:pointer;margin:0 4px}
-  .btn.primary{background:#0ea5e9;color:#fff}
-  .btn.secondary{background:#374151;color:#fff}
-  main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-  textarea{width:80%;max-width:600px;height:80px;padding:10px;border-radius:8px;border:none;margin-bottom:10px}
-  #output{margin-top:20px;max-width:80%;text-align:center}
-  #output img{max-width:100%;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>صور — صانع الصور بالذكاء الاصطناعي</title>
+  <meta name="theme-color" content="#0ea5e9" />
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8;
+      --primary:#0ea5e9; --accent:#6366f1; --border:rgba(255,255,255,0.16);
+      --glass1:rgba(255,255,255,0.10); --glass2:rgba(255,255,255,0.05);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,"Noto Sans Arabic",Segoe UI,Roboto,sans-serif;background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(14,165,233,0.18), transparent),
+        radial-gradient(900px 500px at 10% 120%, rgba(99,102,241,0.14), transparent),
+        linear-gradient(160deg,var(--bg),var(--panel));
+      color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+    header{
+      position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 16px; backdrop-filter:blur(12px) saturate(1.06);
+      background:linear-gradient(180deg,var(--glass1),var(--glass2)); border-bottom:1px solid var(--border);
+      box-shadow:0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:40px;height:40px;border-radius:12px;background:
+      conic-gradient(from 225deg,var(--primary),var(--accent),#22d3ee,var(--primary)); position:relative}
+    .logo::after{
+      content:""; position:absolute; inset:9px; border-radius:8px; background:#fff;
+      mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><path d="M8 20h48v28H8z M20 16h24v8H20z M32 34a10 10 0 1 0 0.001 0" fill="black"/></svg>') no-repeat center / contain;
+    }
+    .title{font-weight:800}
+    .muted{color:var(--muted);font-size:.9rem}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{
+      appearance:none;border:1px solid var(--border);outline:none;cursor:pointer;
+      padding:10px 12px;border-radius:10px;font-weight:800;color:white;
+      background:linear-gradient(180deg,var(--primary),#2563eb);
+      transition:transform .12s ease, filter .2s ease;
+    }
+    .btn:hover{transform:translateY(-1px);filter:saturate(1.08)}
+    .btn.ghost{background:linear-gradient(180deg, var(--glass1), var(--glass2))}
+    main{max-width:900px;margin:18px auto;padding:0 16px;width:100%}
+    .panel{
+      border:1px solid var(--border); border-radius:18px;
+      background:linear-gradient(180deg, var(--glass1), var(--glass2));
+      backdrop-filter:blur(12px) saturate(1.06);
+      box-shadow:0 25px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+      padding:16px;
+    }
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .input, .select{
+      flex:1; min-width:260px; background:rgba(2,6,23,0.5); color:var(--text);
+      border:1px solid var(--border); border-radius:10px; padding:10px; backdrop-filter:blur(8px);
+    }
+    .toggle{display:flex;align-items:center;gap:8px}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:16px}
+    .card{
+      border:1px solid var(--border); border-radius:14px; padding:10px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+    }
+    .img{width:100%;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.28)}
+    .small{font-size:.92rem}
+  </style>
 </head>
 <body>
-<header>
-  <div style="display:flex;align-items:center;gap:10px">
-    <!-- أيقونة مناسبة: كاميرا -->
-    <div style="width:40px;height:40px;border-radius:10px;background:conic-gradient(from 210deg,#0ea5e9,#6366f1,#22d3ee,#0ea5e9)"></div>
-    <strong>صانع الصور — YASSER</strong>
-  </div>
-  <div>
-    <button id="installBtn" class="btn secondary" style="display:none">تثبيت</button>
-    <button id="downloadBtn" class="btn secondary">تنزيل الصفحة</button>
-  </div>
-</header>
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div class="title">صور — صانع الصور بالذكاء الاصطناعي</div>
+        <div class="muted">قابل للتثبيت · اكتب وصفك وتحمّل النتيجة فورًا</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="installBtn" class="btn ghost" style="display:none">تثبيت التطبيق</button>
+      <button id="downloadBtn" class="btn ghost">تنزيل الصفحة</button>
+    </div>
+  </header>
 
-<main>
-  <textarea id="desc" placeholder="اكتب وصف الصورة التي تريد إنشاؤها..."></textarea>
-  <button id="createBtn" class="btn primary">إنشاء صورة</button>
-  <div id="output"></div>
-</main>
+  <main>
+    <section class="panel">
+      <div class="row">
+        <input id="prompt" class="input" placeholder="اكتب وصف الصورة (مثال: روبوت زجاجي أنيق بخلفية نيون)" />
+        <select id="model" class="select" title="النمط">
+          <option value="photoreal" selected>تصويري واقعي</option>
+          <option value="illustration">رسم توضيحي</option>
+          <option value="fantasy">خيال فني</option>
+          <option value="logo">أيقونات/شعارات</option>
+        </select>
+        <select id="size" class="select" title="الحجم">
+          <option value="512x512">512×512</option>
+          <option value="768x768" selected>768×768</option>
+          <option value="1024x1024">1024×1024</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="toggle">
+          <input type="checkbox" id="transparent" />
+          <label for="transparent" class="small">خلفية شفافة</label>
+        </div>
+        <button id="generateBtn" class="btn">توليد الصورة</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div id="status" class="small muted">جاهز.</div>
+      <div id="gallery" class="gallery"></div>
+    </section>
+  </main>
 
 <script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const desc=document.getElementById('desc');
-  const createBtn=document.getElementById('createBtn');
-  const output=document.getElementById('output');
-  const installBtn=document.getElementById('installBtn');
-  const downloadBtn=document.getElementById('downloadBtn');
-  let deferredPrompt=null;
+document.addEventListener('DOMContentLoaded', ()=>{
+  const promptEl = document.getElementById('prompt');
+  const modelEl = document.getElementById('model');
+  const sizeEl = document.getElementById('size');
+  const transparentEl = document.getElementById('transparent');
+  const generateBtn = document.getElementById('generateBtn');
+  const statusEl = document.getElementById('status');
+  const galleryEl = document.getElementById('gallery');
+  const installBtn = document.getElementById('installBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
 
-  // إنشاء صورة (في النسخة الحقيقية يتم استدعاء خدمة توليد الصور)
-  createBtn.onclick=()=>{
-    const text=desc.value.trim();
-    if(!text){alert("اكتب وصف الصورة أولاً");return;}
-    output.innerHTML="<p>جارٍ إنشاء صورة بناءً على الوصف: "+text+"</p>";
-    // هنا يتم استدعاء خدمة توليد الصور الفعلية
-    // في النموذج الحالي سنعرض صورة تجريبية
-    setTimeout(()=>{
-      const img=document.createElement('img');
-      img.src="https://picsum.photos/600/400?random="+Math.floor(Math.random()*1000);
-      output.innerHTML="";
-      output.appendChild(img);
-    },1000);
-  };
+  let deferredPrompt = null;
 
   // تنزيل الصفحة
-  downloadBtn.onclick=()=>{
-    const html=document.documentElement.outerHTML;
-    const blob=new Blob([html],{type:'text/html'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download="ImageMaker-YASSER.html";a.click();URL.revokeObjectURL(url);
-  };
+  downloadBtn.addEventListener('click', ()=>{
+    const html = document.documentElement.outerHTML;
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'Suwar-AI-Image-App.html';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
 
   // PWA install
-  window.addEventListener('beforeinstallprompt',(e)=>{
-    e.preventDefault();deferredPrompt=e;installBtn.style.display='inline-block';
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'inline-block';
   });
-  installBtn.onclick=async()=>{
-    if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display='none';}
-  };
+  installBtn.addEventListener('click', async ()=>{
+    if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; installBtn.style.display='none'; }
+    else alert('افتح التطبيق من خادم محلي أو HTTPS لعرض زر التثبيت.');
+  });
+
+  // Manifest + Service Worker (ديناميكي)
+  async function createIcon(size){
+    const c=document.createElement('canvas'); c.width=size; c.height=size;
+    const ctx=c.getContext('2d');
+    const g=ctx.createLinearGradient(0,0,size,size); g.addColorStop(0,'#0ea5e9'); g.addColorStop(1,'#6366f1');
+    ctx.fillStyle=g; ctx.fillRect(0,0,size,size);
+    // رمز كاميرا بسيط
+    ctx.fillStyle='#fff';
+    const r=size*0.18, x=size*0.5, y=size*0.5;
+    ctx.fillRect(size*0.24, size*0.34, size*0.52, size*0.34);
+    ctx.fillRect(size*0.36, size*0.26, size*0.28, size*0.12);
+    ctx.beginPath(); ctx.arc(x, y+size*0.12, r, 0, Math.PI*2); ctx.fill();
+    const b=await new Promise(res=>c.toBlob(res,'image/png')); return URL.createObjectURL(b);
+  }
+  async function setupManifest(){
+    const i192=await createIcon(192); const i512=await createIcon(512);
+    const m={name:"صور — صانع الصور بالذكاء الاصطناعي",short_name:"صور AI",start_url:"./",display:"standalone",background_color:"#0f172a",theme_color:"#0ea5e9",
+      icons:[{src:i192,sizes:"192x192",type:"image/png"},{src:i512,sizes:"512x512",type:"image/png"}]};
+    const blob=new Blob([JSON.stringify(m)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
+  }
+  async function setupSW(){
+    if(!('serviceWorker' in navigator)) return;
+    const sw = `
+      const CACHE='suwar-ai-app-v1';
+      self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./']))); self.skipWaiting(); });
+      self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
+      self.addEventListener('fetch',e=>{
+        e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+          const copy=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,copy)); return res;
+        })).catch(()=>caches.match('./')));
+      });
+    `;
+    const blob=new Blob([sw],{type:'application/javascript'});
+    const url=URL.createObjectURL(blob);
+    navigator.serviceWorker.register(url,{scope:'./'});
+  }
+  (async function boot(){ await setupManifest(); await setupSW(); })();
+
+  // =========== ربط فعلي بـ API لتوليد الصور ===========
+  // ملاحظة: تحتاج نقطة نهاية توليد صور. عدّل URL واسم الحقل بحسب مزود الخدمة الذي ستستخدمه.
+  // شكل الطلب عامّ: POST JSON { prompt, size, style, transparent_background }
+  // الاستجابة المتوقعة: { url: "https://.../image.png" } أو { base64: "data:image/png;base64,..." }
+
+  async function generateImageAI({ prompt, size, style, transparent }){
+    try{
+      statusEl.textContent = "جارٍ توليد الصورة بالذكاء الاصطناعي…";
+      // غيّر هذا الرابط إلى مزودك الفعلي (خادمك أو خدمة خارجية)
+      const resp = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          size,          // "768x768"
+          style,         // "photoreal" | "illustration" | ...
+          transparent_background: !!transparent
+        })
+      });
+      if(!resp.ok) throw new Error("فشل الطلب: " + resp.status);
+      const data = await resp.json();
+
+      // يدعم إما رابط الصورة أو base64
+      let src = data.url || data.base64;
+      if(!src) throw new Error("الاستجابة لا تحتوي على رابط/بيانات صورة.");
+
+      // عرض الصورة
+      const card = document.createElement('div'); card.className = 'card';
+      const img = document.createElement('img'); img.className = 'img'; img.alt = prompt; img.src = src;
+      const caption = document.createElement('div'); caption.className='small'; caption.textContent = `الوصف: ${prompt}`;
+      const actions = document.createElement('div'); actions.style="display:flex;gap:8px;margin-top:8px";
+      const dl = document.createElement('button'); dl.className='btn ghost'; dl.textContent='تنزيل الصورة';
+      dl.addEventListener('click', ()=>{
+        const a=document.createElement('a'); a.href=src; a.download = `suwar-${Date.now()}.png`; a.click();
+      });
+
+      card.appendChild(img); card.appendChild(caption); actions.appendChild(dl); card.appendChild(actions);
+      galleryEl.prepend(card);
+      statusEl.textContent = "تم توليد الصورة.";
+    }catch(err){
+      console.error(err);
+      statusEl.textContent = "حدث خطأ أثناء التوليد: " + err.message;
+    }
+  }
+
+  // زر التوليد
+  generateBtn.addEventListener('click', async ()=>{
+    const prompt = (promptEl.value || "").trim();
+    if(!prompt){ statusEl.textContent = "اكتب وصف الصورة أولاً."; return; }
+    const style = modelEl.value;
+    const size = sizeEl.value;
+    const transparent = transparentEl.checked;
+    await generateImageAI({ prompt, size, style, transparent });
+  });
+
 });
 </script>
 </body>
